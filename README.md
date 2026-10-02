@@ -1,37 +1,35 @@
 # Scrcpy Studio
 
-Scrcpy Studio adalah dashboard desktop modern untuk mengontrol dan melakukan *mirroring* perangkat Android secara nirkabel (Wi-Fi) maupun kabel (USB), didukung antarmuka modern, kontrol remote cepat, perekaman, tangkapan layar, dan lokalisasi multi-bahasa (English & Indonesian).
-
-Aplikasi dibangun menggunakan arsitektur **Clean Architecture & SOLID** dengan backend Python + PyWebView dan antarmuka web modern responsif.
+Scrcpy Studio is a desktop dashboard for Android device management, wireless ADB pairing, and low-latency screen mirroring. It provides a clean graphical interface built on top of Python, PyWebView, and vanilla web standards.
 
 ---
 
-## 🚀 Fitur Utama
+## Features
 
-- **Multi-Mode Streaming:** USB Ultra Low Latency, Wi-Fi Wireless Stream, Audio-Only, Webcam Mode, dan OTG Hardware Mode.
-- **Wireless ADB Pairing:** Hubungkan perangkat via Wi-Fi (Android 11+ Pair Code & Classic TCP/IP port 5555).
-- **Remote Controls:** Navigasi cepat (Back, Home, App Switch, Volume, Power, Screen Off, Stay Awake).
-- **Media Shortcuts:** Tombol pintas Screenshot dan Rekam MP4 langsung ke folder Pictures/Videos dengan tombol pembuka folder instan.
-- **Multilingual (EN / ID):** Dukungan pergantian bahasa antarmuka secara instan.
-- **Theme Support:** Dark mode dan Light mode dengan persistensi lokal.
+- **Multi-Mode Streaming**: Low-latency USB mirroring, Wi-Fi stream, audio streaming, camera passthrough, and OTG simulation.
+- **Wireless ADB Setup**: Connect via Android 11+ pairing codes or standard TCP/IP port 5555.
+- **Remote Controls**: Hardware key simulation (Home, Back, App Switch, Volume, Power, Screen Off, Stay Awake).
+- **Media Capture**: Instant screenshots and MP4 screen recording with direct folder shortcuts to Pictures and Videos.
+- **Localization**: English and Indonesian language support.
+- **Theme**: Persistent light and dark color schemes.
 
 ---
 
-## 💻 Panduan Menjalankan
+## Getting Started
 
-### 1. Di Windows
+### Windows
 
-#### Prasyarat:
+#### Prerequisites
 - Python 3.8+
-- Scrcpy & ADB (sudah tersedia di folder `bin/` atau di system PATH)
+- Scrcpy and ADB binaries (bundled in `bin/` or located in system `PATH`).
 
-#### Menjalankan Source Code:
+#### Run from Source
 ```powershell
-pip install pywebview
+pip install -r requirements.txt # or: pip install pywebview
 python scrcpy_studio.py
 ```
 
-#### Build Standalone `.exe` (Opsional):
+#### Build Executable
 ```powershell
 pip install pyinstaller pywebview
 python -m PyInstaller --noconfirm --clean --windowed --name "ScrcpyStudio" --icon "app_icon.ico" --add-data "ui;ui" --add-data "app_icon.ico;." scrcpy_studio.py
@@ -39,66 +37,60 @@ python -m PyInstaller --noconfirm --clean --windowed --name "ScrcpyStudio" --ico
 
 ---
 
-### 2. Di macOS (Apple Silicon / Intel)
+### macOS
 
-Scrcpy Studio sudah disesuaikan secara **cross-platform** (mendukung macOS & Linux).
+Scrcpy Studio runs natively on Apple Silicon and Intel macOS using WebKit.
 
-#### Prasyarat macOS:
-Install Scrcpy & ADB menggunakan [Homebrew](https://brew.sh/):
+#### Prerequisites
+Install scrcpy and adb via Homebrew:
 ```bash
 brew install scrcpy android-platform-tools
 ```
 
-#### Menjalankan di Mac:
+#### Run from Source
 ```bash
-# 1. Clone repository
 git clone <repo-url>
 cd scrcpy
 
-# 2. Setup virtual environment (direkomendasikan)
 python3 -m venv venv
 source venv/bin/activate
-
-# 3. Install dependency PyWebView
 pip install pywebview pyobjc-framework-WebKit
 
-# 4. Jalankan aplikasi
 python3 scrcpy_studio.py
 ```
 
-#### Membuat Installer macOS (.app & .dmg):
-Tersedia skrip build otomatis [build_mac.sh](file:///e:/Tools/scrcpy/build_mac.sh):
+#### Build macOS Installer (.app & .dmg)
+A build script is provided to generate a standalone application bundle and disk image:
 ```bash
 chmod +x build_mac.sh
 ./build_mac.sh
 ```
-Skrip ini akan otomatis menghasilkan:
-- `ScrcpyStudio_macOS_v2.0.dmg` (Installer drag-and-drop ke folder Applications)
-- `dist/ScrcpyStudio.app` (Bundle aplikasi native macOS)
-
-#### Catatan untuk Pengguna macOS:
-- Saat pertama kali menghubungkan HP Android via kabel USB ke Mac, pastikan pilih **"Always allow from this computer"** pada dialog USB Debugging di layar HP.
-- Di macOS, PyWebView secara otomatis merender antarmuka menggunakan engine **WebKit Cocoa** bawaan sistem Apple.
+Outputs:
+- `dist/ScrcpyStudio.app`
+- `ScrcpyStudio_macOS_v2.0.dmg`
 
 ---
 
-## 📁 Struktur Direktori
+## Project Structure
 
 ```text
-├── bin/                   # Binary Scrcpy & ADB engine (Windows lokal / di-ignore Git)
-├── ui/                    # Frontend UI modern
-│   ├── assets/            # Logo & icon
-│   ├── css/               # Modular stylesheet (base.css, components.css, style.css)
-│   ├── js/                # Modular scripts (app.js, components.js, i18n.js)
-│   └── index.html         # Template dashboard
-├── scrcpy_studio.py       # Entrypoint aplikasi & JS bridge
-├── services.py            # Layer service (ADB, Scrcpy, Updater)
-├── installer.iss          # Skrip installer Inno Setup (Windows)
+scrcpy/
+├── bin/                   # Local scrcpy/adb binaries (Windows runtime)
+├── ui/                    # Frontend UI module
+│   ├── assets/            # Static image assets
+│   ├── css/               # Modular stylesheets (base, components, style)
+│   ├── js/                # Modular scripts (app, components, i18n)
+│   └── index.html         # Application layout
+├── scrcpy_studio.py       # Main application entry point & JS bridge
+├── services.py            # ADB, Scrcpy, and updater service abstractions
+├── build_mac.sh           # macOS packaging automation script
+├── installer.iss          # Inno Setup Windows installer script
 ├── LICENSE.txt
 └── README.md
 ```
 
 ---
 
-## 📄 Lisensi
-Apache-2.0 License. Engine Scrcpy dikembangkan oleh Genymobile.
+## License
+
+Licensed under the Apache License 2.0. Scrcpy engine is developed by Genymobile.
