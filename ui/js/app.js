@@ -18,7 +18,13 @@ const App = {
       this.refreshDevices();
       this.startPolling();
       this.syncAirPlayStatus();
+      this.hideSplash();
     });
+
+    // Fallback if pywebviewready already fired
+    setTimeout(() => {
+      this.hideSplash();
+    }, 600);
 
     this.loadLaunchOptions();
 
@@ -29,6 +35,16 @@ const App = {
         menu.classList.remove('open');
       }
     });
+  },
+
+  hideSplash() {
+    const splash = document.getElementById('appSplashScreen');
+    if (splash && !splash.classList.contains('hidden')) {
+      splash.classList.add('hidden');
+      setTimeout(() => {
+        splash.style.display = 'none';
+      }, 350);
+    }
   },
 
   toggleLanguage() {
