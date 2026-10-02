@@ -450,6 +450,10 @@ const App = {
   },
 
   async toggleAirPlay() {
+    if (this.currentPlatform === 'darwin') {
+      Toast.show(I18nManager.t('modeAirPlayMacDesc'), "info");
+      return;
+    }
     try {
       const res = await window.pywebview.api.toggle_airplay();
       this.updateAirPlayUI(res.running);
@@ -465,9 +469,31 @@ const App = {
     }
   },
 
+  currentPlatform: 'win32',
+
   updateAirPlayUI(isRunning) {
     const badge = document.getElementById('airplayBadge');
     const card = document.getElementById('airplayCard');
+    const desc = document.getElementById('airplayDesc');
+
+    if (this.currentPlatform === 'darwin') {
+      if (badge) {
+        badge.innerText = I18nManager.t('statusAirPlayMacUnavail');
+        badge.style.background = 'rgba(100, 116, 139, 0.2)';
+        badge.style.color = 'var(--text-sub)';
+        badge.setAttribute('data-i18n', 'statusAirPlayMacUnavail');
+      }
+      if (desc) {
+        desc.innerText = I18nManager.t('modeAirPlayMacDesc');
+        desc.setAttribute('data-i18n', 'modeAirPlayMacDesc');
+      }
+      if (card) {
+        card.classList.add('disabled');
+        card.title = "AirPlay Receiver via UxPlay hanya digunakan di Windows. Di macOS, gunakan AirPlay Receiver bawaan Apple.";
+      }
+      return;
+    }
+
     if (badge) {
       const activeText = I18nManager.t('statusAirPlayActive');
       const offText = I18nManager.t('statusAirPlayOff');
@@ -484,6 +510,7 @@ const App = {
   async syncAirPlayStatus() {
     try {
       const status = await window.pywebview.api.get_airplay_status();
+      this.currentPlatform = status.platform || 'win32';
       this.updateAirPlayUI(status.running);
     } catch {
       // Ignore if not ready

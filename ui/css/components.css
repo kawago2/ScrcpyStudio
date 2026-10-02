@@ -37,6 +37,18 @@
   border-color: var(--primary);
 }
 
+.mode-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.mode-card.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-card);
+}
+
 .mode-card-icon {
   width: 44px;
   height: 44px;
