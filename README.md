@@ -66,6 +66,16 @@ pip install pywebview pyobjc-framework-WebKit
 python3 scrcpy_studio.py
 ```
 
+#### Membuat Installer macOS (.app & .dmg):
+Tersedia skrip build otomatis [build_mac.sh](file:///e:/Tools/scrcpy/build_mac.sh):
+```bash
+chmod +x build_mac.sh
+./build_mac.sh
+```
+Skrip ini akan otomatis menghasilkan:
+- `ScrcpyStudio_macOS_v2.0.dmg` (Installer drag-and-drop ke folder Applications)
+- `dist/ScrcpyStudio.app` (Bundle aplikasi native macOS)
+
 #### Catatan untuk Pengguna macOS:
 - Saat pertama kali menghubungkan HP Android via kabel USB ke Mac, pastikan pilih **"Always allow from this computer"** pada dialog USB Debugging di layar HP.
 - Di macOS, PyWebView secara otomatis merender antarmuka menggunakan engine **WebKit Cocoa** bawaan sistem Apple.

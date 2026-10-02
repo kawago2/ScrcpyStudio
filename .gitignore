@@ -16,6 +16,10 @@ _internal/
 installer_output/
 Output/
 *.exe
+*.dmg
+*.app/
+*.icns
+app.iconset/
 
 # Scrcpy & ADB Engine Binaries (Don't commit 3rd-party vendor binaries/dlls)
 bin/
