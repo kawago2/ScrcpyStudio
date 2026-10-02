@@ -4,6 +4,10 @@
 #define MyAppPublisher "Scrcpy Tools"
 #define MyAppExeName "ScrcpyStudio.exe"
 
+#ifndef MyAppVersion
+#define MyAppVersion "2.0"
+#endif
+
 [Setup]
 AppId={{D37F869A-1F96-4A59-8664-927FDE39712B}
 AppName={#MyAppName}
@@ -11,12 +15,12 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-OutputBaseFilename=ScrcpyStudio_Setup
-OutputDir=e:\Tools\scrcpy\installer_output
+OutputBaseFilename=ScrcpyStudio_Windows_Setup
+OutputDir=installer_output
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-SetupIconFile=e:\Tools\scrcpy\app_icon.ico
+SetupIconFile=app_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
@@ -31,13 +35,13 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-; Main Executable
-Source: "e:\Tools\scrcpy\ScrcpyStudio.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "e:\Tools\scrcpy\app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
-; Scrcpy & ADB engine folder
-Source: "e:\Tools\scrcpy\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Main Executable from PyInstaller dist
+Source: "dist\ScrcpyStudio.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+; Scrcpy & ADB engine folder (if exists)
+Source: "bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs createallsubdirs; Tasks: ; Check: DirExists(ExpandConstant('{src}\bin'))
 ; UI folder
-Source: "e:\Tools\scrcpy\ui\*"; DestDir: "{app}\ui"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "ui\*"; DestDir: "{app}\ui"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app_icon.ico"
