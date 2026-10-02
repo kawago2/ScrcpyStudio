@@ -352,11 +352,19 @@ class ScrcpyUpdaterService(IUpdaterService):
             body_notes = data.get("body", "")
 
             download_url = None
-            for asset in data.get("assets", []):
-                name = asset.get("name", "").lower()
-                if "win64" in name and name.endswith(".zip"):
-                    download_url = asset.get("browser_download_url")
-                    break
+            if sys.platform == "win32":
+                for asset in data.get("assets", []):
+                    name = asset.get("name", "").lower()
+                    if "win64" in name and name.endswith(".zip"):
+                        download_url = asset.get("browser_download_url")
+                        break
+            elif sys.platform == "darwin":
+                # Check for macOS standalone archive if available
+                for asset in data.get("assets", []):
+                    name = asset.get("name", "").lower()
+                    if "macos" in name or "darwin" in name or name.endswith(".tar.gz"):
+                        download_url = asset.get("browser_download_url")
+                        break
 
             def _parse_version(v_str):
                 clean = ''.join(c for c in v_str if c.isdigit() or c == '.')
@@ -370,11 +378,16 @@ class ScrcpyUpdaterService(IUpdaterService):
             except Exception:
                 is_newer = (latest_tag != curr_ver)
 
+            # On macOS, if scrcpy is installed via Homebrew, guide user to brew upgrade
+            brew_instruction = ""
+            if sys.platform == "darwin" and not download_url:
+                brew_instruction = "\n\n(Di macOS: Jalankan 'brew upgrade scrcpy' di Terminal untuk memperbarui binary engine)."
+
             return {
                 "has_update": is_newer,
                 "current_version": curr_ver,
                 "latest_version": latest_tag,
-                "release_notes": body_notes[:500] if body_notes else "",
+                "release_notes": (body_notes[:400] if body_notes else "") + brew_instruction,
                 "download_url": download_url
             }
         except Exception as e:
