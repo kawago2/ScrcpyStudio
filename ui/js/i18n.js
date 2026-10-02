@@ -85,7 +85,40 @@ const I18nManager = {
       toastScreenshot: "Screenshot saved to Pictures",
       toastFolderOpen: "Opened folder",
       toastLangSwitched: "Language switched to English",
-      toastThemeSwitched: "Theme changed to"
+      toastThemeSwitched: "Theme changed to",
+      toastLogsCleared: "Console logs cleared",
+      toastKeySent: "Key sent",
+      toastSelectDeviceWarn: "Please select a device first!",
+      toastAliasSaved: "Device alias saved:",
+      toastFillPairWarn: "Please enter IP, Port, and Pairing Code!",
+      toastPairSuccess: "Pairing Successful!",
+      toastFillConnectWarn: "Please enter IP and Main Connect Port!",
+      toastFillClassicWarn: "Please enter Device IP!",
+      toastOtgWarn: "OTG mode only supports physical USB cable connection!",
+      logOtgWarn: "Warning: OTG mode (--otg) operates via physical USB HID hardware and cannot run over Wi-Fi.",
+      logRestartingAdb: "Restarting ADB Server...",
+      updateTitle: "Scrcpy Engine Update",
+      updateChecking: "Connecting to GitHub API...",
+      updateSubtitleChecking: "Checking official releases from Genymobile/scrcpy...",
+      updateCheckFailed: "Failed to check for updates",
+      updateUpToDateTitle: "✓ Scrcpy Engine Up-to-Date",
+      updateUpToDateSub: "Your version is up to date (v{version})",
+      updateUpToDateDesc: "Current version: <b>v{version}</b>. No new updates required.",
+      updateNewFound: "New Version Available: v{version}",
+      updateNotInstalled: "Scrcpy Not Installed",
+      updateVersionCompare: "Local version: <b>{current}</b> ➔ Target release: <b style=\"color: var(--primary);\">{latest}</b>",
+      updateStarting: "Starting installation process...\n",
+      updateInstallingSub: "Installation/update in progress...",
+      updateSuccessTitle: "Installation Successful!",
+      updateRestartNotice: "The app needs to be restarted to activate the newly installed Scrcpy engine.",
+      updateBtnRestart: "Restart App Now",
+      updateBtnRestarting: "Restarting...",
+      updateToastRestarting: "Reloading application...",
+      updateToastReady: "Scrcpy is ready! Please restart the application.",
+      updateFailedTitle: "Update Failed",
+      updateBtnRetry: "Try Again",
+      updateBtnInstallAuto: "Install Scrcpy Automatically",
+      updateBtnUpdateTo: "Update to v{version}"
     },
     id: {
       navDashboard: "Dashboard",
@@ -160,14 +193,47 @@ const I18nManager = {
       renameSubtitle: "Beri nama panggilan khusus untuk perangkat ini:",
       btnCancel: "Batal",
       btnSaveName: "Simpan Nama",
-      updateTitle: "Pembaruan Scrcpy",
+      updateTitle: "Pembaruan Engine Scrcpy",
       updateSubtitle: "Memeriksa rilis engine scrcpy resmi dari GitHub...",
       btnClose: "Tutup",
       btnDownloadUpdate: "Unduh & Terapkan",
       toastScreenshot: "Screenshot disimpan ke Pictures",
       toastFolderOpen: "Membuka folder",
       toastLangSwitched: "Bahasa beralih ke Bahasa Indonesia",
-      toastThemeSwitched: "Mode berganti ke"
+      toastThemeSwitched: "Mode berganti ke",
+      toastLogsCleared: "Console logs dibersihkan",
+      toastKeySent: "Tombol terkirim",
+      toastSelectDeviceWarn: "Silakan pilih perangkat terlebih dahulu!",
+      toastAliasSaved: "Nama perangkat disimpan:",
+      toastFillPairWarn: "Harap isi IP, Port, dan Pairing Code!",
+      toastPairSuccess: "Pairing Berhasil!",
+      toastFillConnectWarn: "Harap masukkan IP dan Port Connect Utama!",
+      toastFillClassicWarn: "Harap masukkan IP HP!",
+      toastOtgWarn: "Mode OTG hanya mendukung koneksi kabel USB fisik!",
+      logOtgWarn: "Peringatan: Mode OTG (--otg) bekerja via HID hardware USB dan tidak dapat berjalan lewat koneksi nirkabel/Wi-Fi.",
+      logRestartingAdb: "Merestart ADB Server...",
+      updateTitle: "Pembaruan Engine Scrcpy",
+      updateChecking: "Menghubungkan ke GitHub API...",
+      updateSubtitleChecking: "Memeriksa rilis resmi GitHub Genymobile/scrcpy...",
+      updateCheckFailed: "Gagal memeriksa pembaruan",
+      updateUpToDateTitle: "✓ Scrcpy Engine Up-to-Date",
+      updateUpToDateSub: "Versi Anda Sudah yang Terbaru (v{version})",
+      updateUpToDateDesc: "Versi lokal saat ini: <b>v{version}</b>. Tidak ada pembaruan baru yang diperlukan.",
+      updateNewFound: "Versi Baru Ditemukan: v{version}",
+      updateNotInstalled: "Scrcpy Belum Terpasang",
+      updateVersionCompare: "Versi lokal: <b>{current}</b> ➔ Target rilis: <b style=\"color: var(--primary);\">{latest}</b>",
+      updateStarting: "Memulai proses pemasangan...\n",
+      updateInstallingSub: "Proses instalasi/pembaruan sedang berjalan...",
+      updateSuccessTitle: "Pemasangan Berhasil!",
+      updateRestartNotice: "Aplikasi perlu dimuat ulang (restart) agar engine Scrcpy yang baru terpasang dapat aktif sepenuhnya.",
+      updateBtnRestart: "Restart Aplikasi Sekarang",
+      updateBtnRestarting: "Merestart...",
+      updateToastRestarting: "Memuat ulang aplikasi...",
+      updateToastReady: "Scrcpy siap digunakan! Silakan restart aplikasi.",
+      updateFailedTitle: "Gagal Memperbarui",
+      updateBtnRetry: "Coba Lagi",
+      updateBtnInstallAuto: "Install Scrcpy Otomatis",
+      updateBtnUpdateTo: "Update ke v{version}"
     }
   },
 
@@ -180,9 +246,13 @@ const I18nManager = {
     this.apply(lang);
   },
 
-  t(key) {
+  t(key, params = {}) {
     const lang = this.getLang();
-    return this.translations[lang]?.[key] || this.translations['en']?.[key] || key;
+    let text = this.translations[lang]?.[key] || this.translations['en']?.[key] || key;
+    for (const [k, v] of Object.entries(params)) {
+      text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+    }
+    return text;
   },
 
   apply(lang) {

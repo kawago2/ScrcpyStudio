@@ -140,19 +140,24 @@ const App = {
 
   log(msg, type = 'info') {
     const box = document.getElementById('terminalBox');
-    if (!box) return;
     const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-    const row = document.createElement('div');
-    
-    let color = '#94a3b8';
-    if (type === 'success') color = '#4ade80';
-    if (type === 'warn') color = '#fbbf24';
-    if (type === 'error') color = '#f87171';
+    if (box) {
+      const row = document.createElement('div');
+      let color = '#94a3b8';
+      if (type === 'success') color = '#4ade80';
+      if (type === 'warn') color = '#fbbf24';
+      if (type === 'error') color = '#f87171';
+      row.style.color = color;
+      row.innerText = `[${time}] ${msg}`;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
 
-    row.style.color = color;
-    row.innerText = `[${time}] ${msg}`;
-    box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
+    const modalConsole = document.getElementById('updateModalConsole');
+    if (modalConsole && modalConsole.style.display !== 'none') {
+      modalConsole.innerText += `[${time}] ${msg}\n`;
+      modalConsole.scrollTop = modalConsole.scrollHeight;
+    }
   },
 
   clearTerminal() {
@@ -226,20 +231,22 @@ const App = {
   },
 
   async restartAdb() {
-    this.log("Merestart ADB Server...", "warn");
+    this.log(I18nManager.t('logRestartingAdb'), "warn");
     const res = await window.pywebview.api.restart_adb();
-    Toast.show(res, "info");
+    const isSuccess = !res.toLowerCase().includes("gagal") && !res.toLowerCase().includes("error");
+    this.log(res, isSuccess ? "success" : "error");
+    Toast.show(res, isSuccess ? "success" : "error");
     this.refreshDevices();
   },
 
   openRenameModal() {
     const id = this.dropdown.getValue();
     if (!id) {
-      Toast.show("Silakan pilih perangkat terlebih dahulu!", "warn");
+      Toast.show(I18nManager.t('toastSelectDeviceWarn'), "warn");
       return;
     }
     const aliases = AliasStorage.getAll();
-    document.getElementById('renameModalSubtitle').innerText = `ID Perangkat: ${id}`;
+    document.getElementById('renameModalSubtitle').innerText = `ID: ${id}`;
     document.getElementById('renameInput').value = aliases[id] || '';
     document.getElementById('renameModal').classList.add('open');
     document.getElementById('renameInput').focus();
@@ -254,7 +261,7 @@ const App = {
     const alias = document.getElementById('renameInput').value.trim();
     if (alias) {
       AliasStorage.save(id, alias);
-      Toast.show(`Nama perangkat disimpan: "${alias}"`, "success");
+      Toast.show(`${I18nManager.t('toastAliasSaved')} "${alias}"`, "success");
       this.refreshDevices();
     }
     this.closeRenameModal();
@@ -266,15 +273,16 @@ const App = {
     const code = document.getElementById('pairCode').value.trim();
 
     if (!ip || !port || !code) {
-      Toast.show("Harap isi IP, Port, dan Pairing Code!", "warn");
+      Toast.show(I18nManager.t('toastFillPairWarn'), "warn");
       return;
     }
 
     const target = `${ip}:${port}`;
-    this.log(`Menjalankan adb pair ${target}...`, "info");
+    this.log(`adb pair ${target}...`, "info");
     const res = await window.pywebview.api.pair_device(target, code);
-    this.log(res, res.includes("Successfully") ? "success" : "info");
-    Toast.show(res.includes("Successfully") ? "Pairing Berhasil!" : res, res.includes("Successfully") ? "success" : "info");
+    const isSuccess = res.includes("Successfully");
+    this.log(res, isSuccess ? "success" : "info");
+    Toast.show(isSuccess ? I18nManager.t('toastPairSuccess') : res, isSuccess ? "success" : "info");
     this.refreshDevices();
   },
 
@@ -283,12 +291,12 @@ const App = {
     const port = document.getElementById('connectPort').value.trim();
 
     if (!ip || !port) {
-      Toast.show("Harap masukkan IP dan Port Connect Utama!", "warn");
+      Toast.show(I18nManager.t('toastFillConnectWarn'), "warn");
       return;
     }
 
     const target = `${ip}:${port}`;
-    this.log(`Menghubungkan ke ${target}...`, "info");
+    this.log(`adb connect ${target}...`, "info");
     const res = await window.pywebview.api.connect_target(target);
     this.log(res, res.includes("connected") ? "success" : "info");
     Toast.show(res, res.includes("connected") ? "success" : "info");
@@ -298,10 +306,10 @@ const App = {
   async connectClassic() {
     const ip = document.getElementById('classicIp').value.trim();
     if (!ip) {
-      Toast.show("Harap masukkan IP HP!", "warn");
+      Toast.show(I18nManager.t('toastFillClassicWarn'), "warn");
       return;
     }
-    this.log(`Mengaktifkan TCP/IP 5555 dan connect ke ${ip}...`, "info");
+    this.log(`TCP/IP 5555 -> ${ip}...`, "info");
     const res = await window.pywebview.api.connect_classic(ip);
     this.log(res, "success");
     Toast.show(res, "success");
@@ -310,14 +318,14 @@ const App = {
 
   async sendKey(keycode, label) {
     const target = this.dropdown.getValue();
-    this.log(`Mengirim tombol [${label}] ke ${target || 'default'}...`, "info");
+    this.log(`Key [${label}] -> ${target || 'default'}`, "info");
     await window.pywebview.api.send_key(String(keycode), target);
-    Toast.show(`Tombol ${label} terkirim`, "info");
+    Toast.show(`${I18nManager.t('toastKeySent')}: ${label}`, "info");
   },
 
   async takeScreenshot() {
     const target = this.dropdown.getValue();
-    this.log(`Capturing screenshot for device ${target || 'default'}...`, "info");
+    this.log(`Capturing screenshot for ${target || 'default'}...`, "info");
     const res = await window.pywebview.api.take_screenshot(target);
     if (res.success) {
       this.log(res.message, "success");
@@ -342,8 +350,8 @@ const App = {
     const target = this.dropdown.getValue();
 
     if (mode === 'otg' && target && target.includes(':')) {
-      Toast.show("Mode OTG hanya mendukung koneksi kabel USB fisik!", "warn");
-      this.log("Peringatan: Mode OTG (--otg) bekerja via HID hardware USB dan tidak dapat berjalan lewat koneksi nirkabel/Wi-Fi.", "warn");
+      Toast.show(I18nManager.t('toastOtgWarn'), "warn");
+      this.log(I18nManager.t('logOtgWarn'), "warn");
       return;
     }
 
@@ -363,9 +371,11 @@ const App = {
     }
     const optStr = ` (${infoOpts.join(', ')})`;
 
-    this.log(`Memulai mode [${mode.toUpperCase()}] target: ${target || 'default'}${optStr}...`, "info");
+    this.log(`Launch [${mode.toUpperCase()}] target: ${target || 'default'}${optStr}`, "info");
     const res = await window.pywebview.api.launch(mode, target, stayAwake, turnScreenOff, quality, recordScreen);
-    Toast.show(res, "success");
+    const isErr = res.toLowerCase().includes("error") || res.toLowerCase().includes("gagal");
+    this.log(res, isErr ? "error" : "success");
+    Toast.show(res, isErr ? "error" : "success");
   },
 
   latestUpdateUrl: '',
@@ -377,37 +387,48 @@ const App = {
     const content = document.getElementById('updateModalContent');
     const btn = document.getElementById('btnApplyUpdate');
 
-    title.innerText = "Pembaruan Engine Scrcpy";
-    subtitle.innerText = "Memeriksa rilis resmi GitHub Genymobile/scrcpy...";
-    content.innerHTML = `<span style="color: var(--text-sub);">Menghubungkan ke GitHub API...</span>`;
+    title.innerText = I18nManager.t('updateTitle');
+    subtitle.innerText = I18nManager.t('updateSubtitleChecking');
+    content.innerHTML = `<span style="color: var(--text-sub);">${I18nManager.t('updateChecking')}</span>`;
     btn.style.display = 'none';
+    btn.onclick = () => this.applyScrcpyUpdate();
     modal.classList.add('open');
 
     try {
       const res = await window.pywebview.api.check_scrcpy_update();
       if (!res.has_update && res.message && !res.current_version) {
-        subtitle.innerText = "Gagal memeriksa pembaruan";
+        subtitle.innerText = I18nManager.t('updateCheckFailed');
         content.innerHTML = `<span style="color: #ef4444;">${res.message}</span>`;
         return;
       }
 
       if (!res.has_update) {
-        subtitle.innerText = `Versi Anda Sudah yang Terbaru (v${res.current_version})`;
+        subtitle.innerText = I18nManager.t('updateUpToDateSub', { version: res.current_version });
         content.innerHTML = `
-          <div style="color: #22c55e; font-weight: 700; margin-bottom: 6px;">✓ Scrcpy Engine Up-to-Date</div>
-          <div>Versi lokal saat ini: <b>v${res.current_version}</b>. Tidak ada pembaruan baru yang diperlukan.</div>
+          <div style="color: #22c55e; font-weight: 700; margin-bottom: 6px;">${I18nManager.t('updateUpToDateTitle')}</div>
+          <div>${I18nManager.t('updateUpToDateDesc', { version: res.current_version })}</div>
         `;
         return;
       }
 
       this.latestUpdateUrl = res.download_url;
-      subtitle.innerText = `Versi Baru Ditemukan: v${res.latest_version}`;
+      subtitle.innerText = res.current_version === "Belum terpasang" 
+        ? I18nManager.t('updateNotInstalled') 
+        : I18nManager.t('updateNewFound', { version: res.latest_version });
+
+      const versionCompareText = I18nManager.t('updateVersionCompare', {
+        current: res.current_version === "Belum terpasang" ? I18nManager.t('updateNotInstalled') : `v${res.current_version}`,
+        latest: `v${res.latest_version}`
+      });
+
       content.innerHTML = `
-        <div style="margin-bottom: 6px;">Versi lokal: <b>v${res.current_version}</b> ➔ Rilis terbaru: <b style="color: var(--primary);">v${res.latest_version}</b></div>
+        <div style="margin-bottom: 6px;">${versionCompareText}</div>
         <div style="font-size: 11px; color: var(--text-sub); white-space: pre-wrap; font-family: monospace; background: var(--bg-card); padding: 8px; border-radius: 6px;">${res.release_notes}</div>
       `;
       btn.style.display = 'inline-block';
-      btn.innerText = `Update ke v${res.latest_version}`;
+      btn.innerText = res.current_version === "Belum terpasang" 
+        ? I18nManager.t('updateBtnInstallAuto') 
+        : I18nManager.t('updateBtnUpdateTo', { version: res.latest_version });
     } catch (e) {
       subtitle.innerText = "Error";
       content.innerHTML = `<span style="color: #ef4444;">${e}</span>`;
@@ -425,22 +446,41 @@ const App = {
     const btn = document.getElementById('btnApplyUpdate');
 
     btn.disabled = true;
-    btn.innerText = "Mengunduh & Memasang...";
-    subtitle.innerText = "Proses pembaruan sedang berjalan...";
-    content.innerHTML = `<span style="color: var(--primary);">Mengunduh paket biner dari GitHub resmi dan memperbarui engine scrcpy lokal... Harap tunggu sebentar.</span>`;
+    btn.innerText = "...";
+    subtitle.innerText = I18nManager.t('updateInstallingSub');
+    const modalConsole = document.getElementById('updateModalConsole');
+    if (modalConsole) {
+      modalConsole.style.display = 'block';
+      modalConsole.innerText = I18nManager.t('updateStarting');
+    }
 
     try {
       const res = await window.pywebview.api.apply_scrcpy_update(this.latestUpdateUrl);
       if (res.success) {
-        subtitle.innerText = "Pembaruan Berhasil!";
-        content.innerHTML = `<span style="color: #22c55e; font-weight: 700;">${res.message}</span><div style="margin-top: 4px; font-size: 11.5px; color: var(--text-sub);">Sebanyak ${res.updated_files_count} file engine scrcpy telah berhasil diperbarui.</div>`;
-        btn.style.display = 'none';
-        Toast.show(res.message, "success");
+        subtitle.innerText = I18nManager.t('updateSuccessTitle');
+        content.innerHTML = `
+          <div style="color: #22c55e; font-weight: 700; margin-bottom: 6px;">✓ ${res.message}</div>
+          <div style="font-size: 11.5px; color: var(--text-dark); margin-top: 6px;">
+            ${I18nManager.t('updateRestartNotice')}
+          </div>
+        `;
+        btn.disabled = false;
+        btn.style.display = 'inline-block';
+        btn.innerText = I18nManager.t('updateBtnRestart');
+        btn.onclick = async () => {
+          btn.disabled = true;
+          btn.innerText = I18nManager.t('updateBtnRestarting');
+          Toast.show(I18nManager.t('updateToastRestarting'), "info");
+          setTimeout(() => {
+            window.pywebview.api.restart_app();
+          }, 300);
+        };
+        Toast.show(I18nManager.t('updateToastReady'), "success");
       } else {
-        subtitle.innerText = "Gagal Memperbarui";
+        subtitle.innerText = I18nManager.t('updateFailedTitle');
         content.innerHTML = `<span style="color: #ef4444;">${res.message}</span>`;
         btn.disabled = false;
-        btn.innerText = "Coba Lagi";
+        btn.innerText = I18nManager.t('updateBtnRetry');
       }
     } catch (e) {
       subtitle.innerText = "Error";
@@ -518,4 +558,5 @@ const App = {
   }
 };
 
+window.App = App;
 App.init();

@@ -33,7 +33,7 @@ class IUpdaterService(ABC):
         pass
 
     @abstractmethod
-    def download_and_apply_update(self, download_url: str) -> Dict[str, Any]:
+    def download_and_apply_update(self, download_url: str, on_log=None) -> Dict[str, Any]:
         pass
 
 
@@ -259,10 +259,17 @@ class ScrcpyService(IScrcpyService):
         record_screen: bool = False,
         on_log=None
     ) -> str:
-        if not os.path.exists(self.bin):
-            return f"Error: scrcpy.exe tidak ditemukan di {self.bin}"
+        bin_target = self.bin
+        if not os.path.exists(bin_target):
+            import shutil
+            found = shutil.which("scrcpy") or ("/opt/homebrew/bin/scrcpy" if os.path.exists("/opt/homebrew/bin/scrcpy") else None)
+            if found:
+                self.bin = found
+                bin_target = found
+            else:
+                return "Error: Engine Scrcpy belum terpasang. Silakan klik menu 'Update Scrcpy' di sidebar kiri untuk menginstalnya otomatis!"
 
-        cmd = [self.bin]
+        cmd = [bin_target]
         if mode == "otg":
             cmd.append("--otg")
         else:
@@ -316,12 +323,13 @@ class ScrcpyUpdaterService(IUpdaterService):
         self.scrcpy_bin = scrcpy_bin
 
     def get_current_version(self) -> str:
-        if not os.path.exists(self.scrcpy_bin):
+        bin_path = self.scrcpy_bin if os.path.exists(self.scrcpy_bin) else shutil.which("scrcpy")
+        if not bin_path or not os.path.exists(bin_path):
             return "0.0"
         try:
             extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
             res = subprocess.run(
-                [self.scrcpy_bin, "--version"],
+                [bin_path, "--version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -338,6 +346,59 @@ class ScrcpyUpdaterService(IUpdaterService):
 
     def check_for_updates(self) -> Dict[str, Any]:
         curr_ver = self.get_current_version()
+        
+        # On macOS, check if scrcpy is installed or needs installation via Homebrew
+        if sys.platform == "darwin":
+            brew_path = shutil.which("brew") or ("/opt/homebrew/bin/brew" if os.path.exists("/opt/homebrew/bin/brew") else "/usr/local/bin/brew" if os.path.exists("/usr/local/bin/brew") else None)
+            is_installed = curr_ver != "0.0" and bool(shutil.which("scrcpy") or os.path.exists(self.scrcpy_bin))
+            
+            try:
+                req = urllib.request.Request(
+                    self.GITHUB_API,
+                    headers={"User-Agent": "ScrcpyStudio-Updater"}
+                )
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    data = json.loads(response.read().decode('utf-8')) if response.status == 200 else {}
+                latest_tag = data.get("tag_name", "").lstrip("v")
+                body_notes = data.get("body", "")
+            except Exception:
+                latest_tag = "Terbaru"
+                body_notes = ""
+
+            if not is_installed:
+                return {
+                    "has_update": True,
+                    "platform": "darwin",
+                    "current_version": "Belum terpasang",
+                    "latest_version": latest_tag,
+                    "release_notes": "Scrcpy binary belum terpasang di Mac Anda.\nKlik tombol di bawah untuk memasang Scrcpy secara otomatis via Homebrew dari dalam aplikasi.",
+                    "download_url": "brew_install",
+                    "action_label": "Install Scrcpy Otomatis"
+                }
+
+            # Check if brew has upgrade
+            def _parse_version(v_str):
+                clean = ''.join(c for c in v_str if c.isdigit() or c == '.')
+                return [int(x) for x in clean.split('.') if x.isdigit()]
+
+            is_newer = False
+            try:
+                curr_parts = _parse_version(curr_ver)
+                latest_parts = _parse_version(latest_tag)
+                is_newer = latest_parts > curr_parts
+            except Exception:
+                is_newer = (latest_tag != "Terbaru" and latest_tag != curr_ver)
+
+            return {
+                "has_update": is_newer,
+                "platform": "darwin",
+                "current_version": curr_ver,
+                "latest_version": latest_tag,
+                "release_notes": (body_notes[:400] if body_notes else "") + ("\n\nKlik tombol di bawah untuk memperbarui Scrcpy via Homebrew." if is_newer else ""),
+                "download_url": "brew_upgrade",
+                "action_label": f"Update ke v{latest_tag}"
+            }
+
         try:
             req = urllib.request.Request(
                 self.GITHUB_API,
@@ -358,13 +419,6 @@ class ScrcpyUpdaterService(IUpdaterService):
                     if "win64" in name and name.endswith(".zip"):
                         download_url = asset.get("browser_download_url")
                         break
-            elif sys.platform == "darwin":
-                # Check for macOS standalone archive if available
-                for asset in data.get("assets", []):
-                    name = asset.get("name", "").lower()
-                    if "macos" in name or "darwin" in name or name.endswith(".tar.gz"):
-                        download_url = asset.get("browser_download_url")
-                        break
 
             def _parse_version(v_str):
                 clean = ''.join(c for c in v_str if c.isdigit() or c == '.')
@@ -378,17 +432,14 @@ class ScrcpyUpdaterService(IUpdaterService):
             except Exception:
                 is_newer = (latest_tag != curr_ver)
 
-            # On macOS, if scrcpy is installed via Homebrew, guide user to brew upgrade
-            brew_instruction = ""
-            if sys.platform == "darwin" and not download_url:
-                brew_instruction = "\n\n(Di macOS: Jalankan 'brew upgrade scrcpy' di Terminal untuk memperbarui binary engine)."
-
             return {
                 "has_update": is_newer,
+                "platform": "win32",
                 "current_version": curr_ver,
                 "latest_version": latest_tag,
-                "release_notes": (body_notes[:400] if body_notes else "") + brew_instruction,
-                "download_url": download_url
+                "release_notes": body_notes[:400] if body_notes else "",
+                "download_url": download_url,
+                "action_label": f"Update ke v{latest_tag}"
             }
         except Exception as e:
             return {
@@ -397,7 +448,61 @@ class ScrcpyUpdaterService(IUpdaterService):
                 "message": f"Koneksi gagal atau rate limited: {e}"
             }
 
-    def download_and_apply_update(self, download_url: str) -> Dict[str, Any]:
+    def download_and_apply_update(self, download_url: str, on_log=None) -> Dict[str, Any]:
+        # Handle macOS installation / update via Homebrew
+        if sys.platform == "darwin" or download_url in ["brew_install", "brew_upgrade"]:
+            brew_path = shutil.which("brew") or ("/opt/homebrew/bin/brew" if os.path.exists("/opt/homebrew/bin/brew") else "/usr/local/bin/brew" if os.path.exists("/usr/local/bin/brew") else None)
+            if not brew_path or not os.path.exists(brew_path):
+                return {
+                    "success": False,
+                    "message": "Homebrew (brew) tidak ditemukan di Mac Anda. Harap pasang Homebrew terlebih dahulu dari https://brew.sh"
+                }
+
+            kill_scrcpy_process()
+            cmd = [brew_path, "install", "scrcpy"] if download_url == "brew_install" else [brew_path, "upgrade", "scrcpy"]
+            if on_log:
+                on_log(f"Menjalankan installer: {' '.join(cmd)}")
+
+            env = dict(os.environ)
+            env["HOMEBREW_NO_AUTO_UPDATE"] = "1"
+            env["PYTHONUNBUFFERED"] = "1"
+            if "/opt/homebrew/bin" not in env.get("PATH", ""):
+                env["PATH"] = f"/opt/homebrew/bin:/usr/local/bin:{env.get('PATH', '')}"
+
+            try:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    env=env
+                )
+                output_lines = []
+                for line in iter(process.stdout.readline, ''):
+                    line_clean = line.strip()
+                    if line_clean:
+                        output_lines.append(line_clean)
+                        if on_log:
+                            on_log(f"[Brew] {line_clean}")
+                
+                process.wait()
+                if process.returncode == 0:
+                    new_ver = self.get_current_version()
+                    return {
+                        "success": True,
+                        "message": f"Scrcpy berhasil dipasang/diperbarui ke v{new_ver}!",
+                        "version": new_ver,
+                        "updated_files_count": len(output_lines)
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Proses brew selesai dengan kode error {process.returncode}: " + "\n".join(output_lines[-3:])
+                    }
+            except Exception as e:
+                return {"success": False, "message": f"Gagal menjalankan installer brew: {e}"}
+
         temp_zip = os.path.join(self.base_dir, "scrcpy_update_temp.zip")
         extract_dir = os.path.join(self.base_dir, "scrcpy_extracted_temp")
 

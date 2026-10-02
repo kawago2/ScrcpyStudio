@@ -6,7 +6,7 @@
   <title>Scrcpy Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
   <link rel="icon" type="image/png" href="assets/app_icon.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -341,15 +341,19 @@
 
   <!-- Scrcpy Update Modal -->
   <div class="modal-overlay" id="updateModal">
-    <div class="modal-card" style="width: 440px;">
+    <div class="modal-card" style="width: 520px;">
       <div class="modal-title" id="updateModalTitle" data-i18n="updateTitle">Scrcpy Update</div>
       <div class="modal-desc" id="updateModalSubtitle" data-i18n="updateSubtitle">Checking official scrcpy releases from GitHub...</div>
       
-      <div id="updateModalContent" style="font-size: 12px; line-height: 1.5; color: var(--text-dark); background: var(--bg-app); border: 1px solid var(--border-card); padding: 12px; border-radius: var(--radius-sm); max-height: 160px; overflow-y: auto;">
+      <div id="updateModalContent" style="font-size: 12px; line-height: 1.5; color: var(--text-dark); background: var(--bg-app); border: 1px solid var(--border-card); padding: 12px; border-radius: var(--radius-sm); max-height: 140px; overflow-y: auto;">
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
-        <button class="btn-secondary" onclick="App.closeUpdateModal()" data-i18n="btnClose">Close</button>
+      <!-- Live Terminal Output Inside Modal -->
+      <div id="updateModalConsole" style="display: none; margin-top: 10px; background: #0b1120; color: #38bdf8; font-family: monospace; font-size: 11px; padding: 10px; border-radius: 8px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4;">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+        <button class="btn-secondary" id="btnCloseUpdate" onclick="App.closeUpdateModal()" data-i18n="btnClose">Close</button>
         <button class="btn-main" id="btnApplyUpdate" style="display: none;" onclick="App.applyScrcpyUpdate()" data-i18n="btnDownloadUpdate">Download & Update</button>
       </div>
     </div>
