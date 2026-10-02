@@ -83,6 +83,7 @@ scrcpy/
 │   └── index.html         # Application layout
 ├── scrcpy_studio.py       # Main application entry point & JS bridge
 ├── services.py            # ADB, Scrcpy, and updater service abstractions
+├── airplay_service.py     # iOS AirPlay receiver service
 ├── build_mac.sh           # macOS packaging automation script
 ├── installer.iss          # Inno Setup Windows installer script
 ├── LICENSE.txt
@@ -91,6 +92,16 @@ scrcpy/
 
 ---
 
+## Credits & Acknowledgements
+
+Scrcpy Studio integrates and relies on outstanding open-source technologies:
+
+- **[scrcpy](https://github.com/Genymobile/scrcpy)** by Genymobile: High-performance Android screen mirroring and control over USB and Wi-Fi.
+- **[UxPlay](https://github.com/FDH2/UxPlay) / [uxplay-windows](https://github.com/leapbtw/uxplay-windows)**: AirPlay-compatible screen mirroring receiver for iOS devices (iPhone & iPad).
+- **[pywebview](https://pywebview.flowrl.com/)**: Lightweight cross-platform desktop wrapper for modern web GUIs.
+
+---
+
 ## License
 
-Licensed under the Apache License 2.0. Scrcpy engine is developed by Genymobile.
+Licensed under the Apache License 2.0. Scrcpy is copyright Genymobile. UxPlay is copyright its respective authors (GPL-3.0).
