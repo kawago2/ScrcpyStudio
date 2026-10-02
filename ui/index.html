@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrcpy Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/app_icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Left Sidebar (Clean Alvance Style) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/app_icon.png" width="34" height="34" style="border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" alt="Icon">
+      <span class="brand-title">ScrcpyHub</span>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-item active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span data-i18n="navDashboard">Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="App.restartAdb()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span data-i18n="navRestartAdb">Restart ADB</span>
+      </div>
+      <div class="nav-item" onclick="App.clearTerminal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span data-i18n="navClearLogs">Clear Logs</span>
+      </div>
+      <div class="nav-item" onclick="App.checkScrcpyUpdate()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <span data-i18n="navUpdateScrcpy">Update Scrcpy</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-banner">
+      <h5 data-i18n="bannerTitle">Scrcpy Engine</h5>
+      <p data-i18n="bannerDesc">Low latency streaming & audio mirroring for Android.</p>
+    </div>
+  </aside>
+
+  <!-- Main View -->
+  <main class="main-content">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-device-bar">
+        <!-- Custom Dropdown Selector -->
+        <div class="device-chip" id="deviceChip" onclick="App.dropdown.toggle()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <span class="device-chip-label" id="selectedDeviceText">(Auto / Default Device)</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+
+          <!-- Custom Menu -->
+          <div class="custom-device-menu" id="customDeviceMenu"></div>
+        </div>
+
+        <button class="btn-round" data-i18n-title="btnRenameDevice" title="Rename Device" id="btnRenameDevice" onclick="App.openRenameModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
+        <button class="btn-round" data-i18n-title="btnRefreshDevice" title="Refresh Devices" id="btnRefreshDevice" onclick="App.refreshDevices()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        </button>
+      </div>
+
+      <div class="header-actions">
+        <!-- Language Switcher Button (EN / ID) -->
+        <button class="btn-lang-toggle" id="langToggleBtn" data-i18n-title="tipLang" title="Switch Language" onclick="App.toggleLanguage()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="currentLangLabel">EN</span>
+        </button>
+
+        <button class="btn-round" id="themeToggleBtn" data-i18n-title="tipTheme" title="Toggle Light / Dark Mode" onclick="App.toggleTheme()">
+          <!-- Sun Icon (Default in Dark mode) / Moon Icon in Light mode -->
+          <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <div class="status-badge-chip offline" id="statusBadgeChip">
+          <span class="badge-dot"></span>
+          <span id="statusBadgeText" data-i18n="noDevice">No Device</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Content Body -->
+    <div class="dashboard-body">
+      
+      <!-- Left Column: Launch Mode Cards -->
+      <div class="column-stack">
+        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="card-title-row">
+            <h3 data-i18n="modesTitle">Display & Streaming Modes</h3>
+            <span style="font-size: 12px; color: var(--text-sub); font-weight: 600;" data-i18n="modesSubtitle">One-Click Launch</span>
+          </div>
+
+          <div class="modes-grid">
+            
+            <div class="mode-card purple" onclick="App.launchMode('usb')">
+              <div class="mode-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <div>
+                <div class="mode-card-title" data-i18n="modeUsbTitle">USB Mirroring</div>
+                <div class="mode-card-desc" id="usbModeDesc">1080p • 60 FPS • 8 Mbps Low Latency</div>
+              </div>
+            </div>
+
+            <div class="mode-card cyan" onclick="App.launchMode('wifi')">
+              <div class="mode-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+              </div>
+              <div>
+                <div class="mode-card-title" data-i18n="modeWifiTitle">Wi-Fi Mirroring</div>
+                <div class="mode-card-desc" id="wifiModeDesc">1080p • 60 FPS • 4 Mbps Wireless</div>
+              </div>
+            </div>
+
+            <div class="mode-card orange" onclick="App.launchMode('audio')">
+              <div class="mode-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 18v-6a9 9 0 0 1 18 0v6M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+              </div>
+              <div>
+                <div class="mode-card-title" data-i18n="modeAudioTitle">Audio Only Stream</div>
+                <div class="mode-card-desc" data-i18n="modeAudioDesc">Stream device audio to PC without video</div>
+              </div>
+            </div>
+
+            <div class="mode-card green" onclick="App.launchMode('camera')">
+              <div class="mode-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div>
+                <div class="mode-card-title" data-i18n="modeCameraTitle">Device Camera / Webcam</div>
+                <div class="mode-card-desc" data-i18n="modeCameraDesc">Use front/back camera as PC webcam</div>
+              </div>
+            </div>
+
+            <div class="mode-card blue" onclick="App.launchMode('otg')" title="Simulasi keyboard & mouse fisik via USB (Kabel USB diperlukan)">
+              <div class="mode-card-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="10" y1="12" x2="10.01" y2="12"/><line x1="14" y1="12" x2="14.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+              </div>
+              <div>
+                <div class="mode-card-title" data-i18n="modeOtgTitle">Keyboard & Mouse (OTG)</div>
+                <div class="mode-card-desc" data-i18n="modeOtgDesc">Type on phone using PC keyboard (USB required)</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Launch Options Toolbar -->
+          <div class="launch-options-bar">
+            <span class="launch-options-title" data-i18n="optTitle">Device Screen Settings:</span>
+            
+            <label class="toggle-option" data-i18n-title="tipStayAwake" title="Keep device display awake while running">
+              <input type="checkbox" id="optStayAwake" checked onchange="App.saveLaunchOptions()">
+              <span class="toggle-switch"></span>
+              <span class="toggle-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <span data-i18n="optStayAwake">Stay Awake</span>
+              </span>
+            </label>
+
+            <label class="toggle-option" data-i18n-title="tipScreenOff" title="Turn screen off while mirroring">
+              <input type="checkbox" id="optTurnScreenOff" onchange="App.saveLaunchOptions()">
+              <span class="toggle-switch"></span>
+              <span class="toggle-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                <span data-i18n="optScreenOff">Turn Screen Off</span>
+              </span>
+            </label>
+
+            <!-- Custom Quality Preset Selector -->
+            <div class="quality-chip" id="qualityChip" onclick="App.toggleQualityDropdown(event)" data-i18n-title="tipQuality" title="Preset Kualitas Layar (Resolusi & Bitrate)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span id="selectedQualityText" style="font-size: 11.5px; font-weight: 600; color: var(--text-dark);">Balanced (1080p • 8M)</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+
+              <!-- Custom Quality Menu -->
+              <div class="custom-quality-menu" id="customQualityMenu">
+                <div class="custom-quality-item" data-val="low" onclick="App.selectQuality('low', event)">
+                  <span data-i18n="presetLow">Low Latency (720p • 4M)</span>
+                </div>
+                <div class="custom-quality-item active" data-val="balanced" onclick="App.selectQuality('balanced', event)">
+                  <span data-i18n="presetBalanced">Balanced (1080p • 8M)</span>
+                </div>
+                <div class="custom-quality-item" data-val="high" onclick="App.selectQuality('high', event)">
+                  <span data-i18n="presetHigh">High Quality (Native • 16M)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Record Screen Toggle -->
+            <label class="toggle-option" data-i18n-title="tipRecord" title="Record mirroring session to PC Videos folder (.mp4)">
+              <input type="checkbox" id="optRecordScreen" onchange="App.saveLaunchOptions()">
+              <span class="toggle-switch"></span>
+              <span class="toggle-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                <span data-i18n="optRecord">Record Screen (MP4)</span>
+              </span>
+            </label>
+          </div>
+
+          <!-- Quick Remote Controls Toolbar -->
+          <div class="remote-toolbar">
+            <span class="launch-options-title" data-i18n="remoteTitle">Device Remote Control:</span>
+            <div class="remote-btn-group">
+              <button class="remote-btn" data-i18n-title="tipPower" title="Power" onclick="App.sendKey(26, 'Power')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+                Power
+              </button>
+              <button class="remote-btn" data-i18n-title="tipVolUp" title="Vol +" onclick="App.sendKey(24, 'Vol Up')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Vol +
+              </button>
+              <button class="remote-btn" data-i18n-title="tipVolDown" title="Vol -" onclick="App.sendKey(25, 'Vol Down')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Vol -
+              </button>
+              <button class="remote-btn" data-i18n-title="tipHome" title="Home" onclick="App.sendKey(3, 'Home')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                Home
+              </button>
+              <button class="remote-btn" data-i18n-title="tipBack" title="Back" onclick="App.sendKey(4, 'Back')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                Back
+              </button>
+              <button class="remote-btn" data-i18n-title="tipRecents" title="Recents" onclick="App.sendKey(187, 'App Switch')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+                Recents
+              </button>
+              <button class="remote-btn highlight" data-i18n-title="tipScreenshot" title="Screenshot" onclick="App.takeScreenshot()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span data-i18n="btnScreenshot">Screenshot</span>
+              </button>
+
+              <!-- Folder Shortcuts -->
+              <button class="remote-btn" data-i18n-title="tipPictures" title="Pictures" onclick="App.openFolder('pictures')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span data-i18n="btnPicturesFolder">Pictures</span>
+              </button>
+              <button class="remote-btn" data-i18n-title="tipVideos" title="Videos" onclick="App.openFolder('videos')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><polygon points="10 11 10 15 14 13 10 11"/></svg>
+                <span data-i18n="btnVideosFolder">Videos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Wireless Debugging & Terminal -->
+      <div class="column-stack">
+        
+        <!-- Wireless ADB Setup Card -->
+        <div class="card wireless-card">
+          <div class="card-title-row">
+            <h3 data-i18n="wirelessTitle">Wireless Connection Setup</h3>
+          </div>
+
+          <div class="tabs-header">
+            <button class="tab-btn active" onclick="App.switchTab('tabWireless')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: -2px;"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+              <span data-i18n="tabWireless">Android 11+ Wireless Debugging</span>
+            </button>
+            <button class="tab-btn" onclick="App.switchTab('tabClassic')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px; vertical-align: -2px;"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              <span data-i18n="tabClassic">Port 5555 Standard</span>
+            </button>
+          </div>
+
+          <div id="tabWireless" class="tab-panel active">
+            <p style="font-size: 11.5px; color: var(--text-sub); margin-bottom: 12px;" data-i18n="wirelessHelp">
+              On device: <b>Developer options → Wireless debugging → Pair with pairing code</b>
+            </p>
+            <div class="form-row">
+              <input type="text" id="pairIp" class="custom-input" data-i18n-placeholder="phPairIp" placeholder="Device IP (192.168.18.69)" style="flex: 2;">
+              <input type="text" id="pairPort" class="custom-input" data-i18n-placeholder="phPairPort" placeholder="Pair Port (37597)" style="flex: 1.2;">
+              <input type="text" id="pairCode" class="custom-input" data-i18n-placeholder="phPairCode" placeholder="6-digit Code" style="flex: 1.2;">
+              <button class="btn-main" onclick="App.pairDevice()" data-i18n="btnPair">Pair</button>
+            </div>
+            <div class="form-row">
+              <input type="text" id="connectPort" class="custom-input" data-i18n-placeholder="phConnectPort" placeholder="Main Connect Port (e.g. 43151)" style="flex: 2;">
+              <button class="btn-secondary" style="font-weight: 700;" onclick="App.connectDirectPort()" data-i18n="btnConnect">Connect Device</button>
+            </div>
+          </div>
+
+          <div id="tabClassic" class="tab-panel">
+            <p style="font-size: 11.5px; color: var(--text-sub); margin-bottom: 12px;" data-i18n="classicHelp">
+              Plug USB cable once to activate TCP/IP 5555:
+            </p>
+            <div class="form-row">
+              <input type="text" id="classicIp" class="custom-input" data-i18n-placeholder="phClassicIp" placeholder="Device IP (192.168.18.180)" style="flex: 1;">
+              <button class="btn-main" onclick="App.connectClassic()" data-i18n="btnConnectClassic">Connect Port 5555</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Log Card -->
+        <div class="card terminal-card">
+          <div class="card-title-row" style="margin-bottom: 10px;">
+            <h3 data-i18n="consoleTitle">Activity Console</h3>
+            <span style="font-size: 11px; font-weight: 600; color: #22c55e;" data-i18n="consoleBadge">Live ADB Feed</span>
+          </div>
+          <div class="terminal-box" id="terminalBox"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Custom Rename Modal -->
+  <div class="modal-overlay" id="renameModal">
+    <div class="modal-card">
+      <div class="modal-title" data-i18n="renameTitle">Rename Device Alias</div>
+      <div class="modal-desc" id="renameModalSubtitle" data-i18n="renameSubtitle">Set a custom alias name for this device:</div>
+      <input type="text" id="renameInput" class="custom-input" data-i18n-placeholder="phRename" style="width: 100%;" placeholder="e.g. Poco F5 Pro / Gaming Phone">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+        <button class="btn-secondary" onclick="App.closeRenameModal()" data-i18n="btnCancel">Cancel</button>
+        <button class="btn-main" onclick="App.confirmRename()" data-i18n="btnSaveName">Save Name</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrcpy Update Modal -->
+  <div class="modal-overlay" id="updateModal">
+    <div class="modal-card" style="width: 440px;">
+      <div class="modal-title" id="updateModalTitle" data-i18n="updateTitle">Scrcpy Update</div>
+      <div class="modal-desc" id="updateModalSubtitle" data-i18n="updateSubtitle">Checking official scrcpy releases from GitHub...</div>
+      
+      <div id="updateModalContent" style="font-size: 12px; line-height: 1.5; color: var(--text-dark); background: var(--bg-app); border: 1px solid var(--border-card); padding: 12px; border-radius: var(--radius-sm); max-height: 160px; overflow-y: auto;">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+        <button class="btn-secondary" onclick="App.closeUpdateModal()" data-i18n="btnClose">Close</button>
+        <button class="btn-main" id="btnApplyUpdate" style="display: none;" onclick="App.applyScrcpyUpdate()" data-i18n="btnDownloadUpdate">Download & Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modular Scripts -->
+  <script src="js/i18n.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

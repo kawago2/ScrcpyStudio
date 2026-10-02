@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# PyInstaller & Compiler Outputs
+build/
+dist/
+_internal/
+installer_output/
+Output/
+*.exe
+
+# Scrcpy & ADB Engine Binaries (Don't commit 3rd-party vendor binaries/dlls)
+bin/
+*.dll
+scrcpy-server
+
+# Legacy / Unused batch scripts & shortcuts
+scrcpy_hub.bat
+scrcpy_hub.lnk
+scrcpy_hub_app.py
+scrcpy-noconsole.vbs
+open_a_terminal_here.bat
+disconnected.png
+scrcpy.png
+
+# Temporary updater archives
+scrcpy_update_temp.zip
+scrcpy_extracted_temp/
+
+# OS metadata & temporary files
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# IDE & Assistant configs
+.vscode/
+.idea/
+.agents/
