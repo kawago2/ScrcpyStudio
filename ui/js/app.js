@@ -35,6 +35,7 @@ const App = {
     I18nManager.toggle();
     this.updatePresetDescriptions();
     this.refreshDevices(true);
+    this.syncAirPlayStatus();
     Toast.show(I18nManager.t('toastLangSwitched'), 'info');
   },
 
@@ -468,9 +469,12 @@ const App = {
     const badge = document.getElementById('airplayBadge');
     const card = document.getElementById('airplayCard');
     if (badge) {
-      badge.innerText = isRunning ? 'RUNNING' : 'STANDBY';
+      const activeText = I18nManager.t('statusAirPlayActive');
+      const offText = I18nManager.t('statusAirPlayOff');
+      badge.innerText = isRunning ? activeText : offText;
       badge.style.background = isRunning ? '#22c55e' : 'var(--bg-app)';
       badge.style.color = isRunning ? '#ffffff' : 'var(--text-sub)';
+      badge.setAttribute('data-i18n', isRunning ? 'statusAirPlayActive' : 'statusAirPlayOff');
     }
     if (card) {
       card.style.borderColor = isRunning ? '#db2777' : 'var(--border-card)';
