@@ -445,6 +445,22 @@ const App = {
       content.innerHTML = `<span style="color: #ef4444;">${e}</span>`;
       btn.disabled = false;
     }
+  },
+
+  async toggleAirPlay() {
+    this.log("Mengaktifkan iOS AirPlay Mirror Receiver...", "info");
+    try {
+      const res = await window.pywebview.api.start_airplay();
+      if (res.success) {
+        this.log(res.message, "success");
+        Toast.show(res.message, "success");
+      } else {
+        this.log(res.message, "warn");
+        Toast.show(res.message, "warn");
+      }
+    } catch (e) {
+      this.log(`Error AirPlay: ${e}`, "error");
+    }
   }
 };
 

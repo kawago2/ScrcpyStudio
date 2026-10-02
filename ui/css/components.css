@@ -51,6 +51,7 @@
 .mode-card.orange .mode-card-icon { background: var(--pastel-orange); color: var(--orange-text); }
 .mode-card.green .mode-card-icon { background: var(--pastel-green); color: var(--green-text); }
 .mode-card.blue .mode-card-icon { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+.mode-card.pink .mode-card-icon { background: rgba(236, 72, 153, 0.15); color: #db2777; }
 
 .mode-card-title {
   font-size: 13.5px;

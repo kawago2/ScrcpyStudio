@@ -11,6 +11,7 @@ from services import (
     ScrcpyService,
     ScrcpyUpdaterService,
 )
+from airplay_service import AirPlayService
 
 # Path Resolution
 if getattr(sys, "frozen", False):
@@ -47,14 +48,25 @@ class AppController:
         adb_service: IADBService,
         scrcpy_service: IScrcpyService,
         updater_service: IUpdaterService,
+        airplay_service: AirPlayService,
     ):
         self._adb = adb_service
         self._scrcpy = scrcpy_service
         self._updater = updater_service
+        self._airplay = airplay_service
         self._window = None
 
     def set_window(self, win):
         self._window = win
+
+    def get_airplay_status(self) -> Dict[str, Any]:
+        return self._airplay.get_status()
+
+    def start_airplay(self) -> Dict[str, Any]:
+        return self._airplay.start_receiver()
+
+    def stop_airplay(self) -> Dict[str, Any]:
+        return self._airplay.stop_receiver()
 
     def get_devices(self) -> List[Dict[str, str]]:
         return self._adb.list_devices()
@@ -142,7 +154,8 @@ def main():
     adb_service = ADBService(ADB_BIN)
     scrcpy_service = ScrcpyService(SCRCPY_BIN)
     updater_service = ScrcpyUpdaterService(BASE_DIR, SCRCPY_BIN)
-    controller = AppController(adb_service, scrcpy_service, updater_service)
+    airplay_service = AirPlayService()
+    controller = AppController(adb_service, scrcpy_service, updater_service, airplay_service)
 
     win = webview.create_window(
         title="Scrcpy Dashboard Hub",
