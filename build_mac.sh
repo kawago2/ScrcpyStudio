@@ -21,8 +21,12 @@ if ! command -v brew &> /dev/null; then
 fi
 
 echo "=== 2. Memasang Dependensi Python ==="
-python3 -m pip install --upgrade pip
-python3 -m pip install pywebview pyobjc-framework-WebKit pyinstaller
+PYTHON_CMD="python3"
+if [ -f "venv/bin/python" ]; then
+    PYTHON_CMD="venv/bin/python"
+fi
+$PYTHON_CMD -m pip install --upgrade pip
+$PYTHON_CMD -m pip install pywebview pyobjc-framework-WebKit pyinstaller
 
 echo "=== 3. Membersihkan Direktori Build Lama ==="
 rm -rf build dist "${DMG_NAME}"
@@ -46,7 +50,7 @@ if [ -f "ui/assets/app_icon.png" ]; then
     fi
 fi
 
-python3 -m PyInstaller \
+$PYTHON_CMD -m PyInstaller \
     --noconfirm \
     --clean \
     --windowed \
@@ -55,6 +59,10 @@ python3 -m PyInstaller \
     --add-data "ui:ui" \
     --osx-bundle-identifier "com.scrcpy.studio" \
     scrcpy_studio.py
+
+# Ensure ui is also accessible in Resources and MacOS directories of the bundle
+cp -R ui "dist/${APP_NAME}.app/Contents/Resources/" 2>/dev/null || true
+cp -R ui "dist/${APP_NAME}.app/Contents/MacOS/" 2>/dev/null || true
 
 echo "=== 5. Membuat Installer Disk Image (.dmg) ==="
 DMG_STAGING="dist/dmg_staging"
