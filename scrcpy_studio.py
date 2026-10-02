@@ -161,7 +161,7 @@ def main():
     controller = AppController(adb_service, scrcpy_service, updater_service, airplay_service)
 
     win = webview.create_window(
-        title="Scrcpy Dashboard Hub",
+        title="Scrcpy Studio",
         url=UI_HTML,
         js_api=controller,
         width=1120,
