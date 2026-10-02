@@ -62,6 +62,9 @@ class AppController:
     def get_airplay_status(self) -> Dict[str, Any]:
         return self._airplay.get_status()
 
+    def toggle_airplay(self) -> Dict[str, Any]:
+        return self._airplay.toggle_receiver()
+
     def start_airplay(self) -> Dict[str, Any]:
         return self._airplay.start_receiver()
 

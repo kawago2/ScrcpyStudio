@@ -30,41 +30,51 @@ class AirPlayService:
 
         return None
 
+    def is_running(self) -> bool:
+        if self._process is not None and self._process.poll() is None:
+            return True
+        if sys.platform == "win32":
+            res = subprocess.run(["tasklist.exe", "/FI", "IMAGENAME eq uxplay-windows.exe"], capture_output=True, text=True)
+            return "uxplay-windows.exe" in res.stdout
+        else:
+            res = subprocess.run(["pgrep", "-f", "uxplay"], capture_output=True)
+            return res.returncode == 0
+
     def get_status(self) -> Dict[str, Any]:
-        is_running = self._process is not None and self._process.poll() is None
-        installed = self.find_executable() is not None or sys.platform == "darwin"
         return {
-            "installed": installed,
-            "running": is_running,
+            "installed": self.find_executable() is not None or sys.platform == "darwin",
+            "running": self.is_running(),
             "platform": sys.platform
         }
 
+    def toggle_receiver(self) -> Dict[str, Any]:
+        if self.is_running():
+            return self.stop_receiver()
+        else:
+            return self.start_receiver()
+
     def start_receiver(self) -> Dict[str, Any]:
         if sys.platform == "darwin":
-            # On macOS, AirPlay receiver is built into the OS or QuickTime can be opened
             try:
                 subprocess.Popen(["open", "-a", "QuickTime Player"])
                 return {
                     "success": True,
-                    "message": "QuickTime Player dibuka di macOS (Pilih File > New Movie Recording > iPad/iPhone)."
+                    "running": True,
+                    "message": "QuickTime Player dibuka di macOS."
                 }
             except Exception as e:
-                return {"success": False, "message": f"Gagal membuka QuickTime: {e}"}
+                return {"success": False, "running": False, "message": f"Gagal membuka QuickTime: {e}"}
 
-        # Windows
         exe_path = self.find_executable()
         if not exe_path:
             return {
                 "success": False,
                 "installed": False,
+                "running": False,
                 "message": "UxPlay belum terpasang. Jalankan 'winget install leapbtw.uxplay' di terminal."
             }
 
-        if self._process is not None and self._process.poll() is None:
-            return {"success": True, "running": True, "message": "AirPlay Receiver sudah aktif dan siap menerima koneksi iPhone/iPad."}
-
         try:
-            # Launch detached process so window stays open for user
             self._process = subprocess.Popen(
                 [exe_path],
                 creationflags=subprocess.DETACHED_PROCESS if sys.platform == "win32" else 0
@@ -75,7 +85,7 @@ class AirPlayService:
                 "message": "AirPlay Receiver aktif! Buka Control Center di iPhone/iPad lalu tap Screen Mirroring."
             }
         except Exception as e:
-            return {"success": False, "message": f"Gagal menjalankan UxPlay: {e}"}
+            return {"success": False, "running": False, "message": f"Gagal menjalankan UxPlay: {e}"}
 
     def stop_receiver(self) -> Dict[str, Any]:
         try:
@@ -85,6 +95,6 @@ class AirPlayService:
             else:
                 subprocess.run(["pkill", "-f", "uxplay"], capture_output=True)
             self._process = None
-            return {"success": True, "message": "AirPlay Receiver dihentikan."}
+            return {"success": True, "running": False, "message": "AirPlay Receiver dinonaktifkan."}
         except Exception as e:
-            return {"success": False, "message": f"Gagal menghentikan: {e}"}
+            return {"success": False, "running": True, "message": f"Gagal menghentikan: {e}"}

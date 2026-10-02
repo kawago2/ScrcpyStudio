@@ -149,13 +149,16 @@
               </div>
             </div>
 
-            <div class="mode-card pink" onclick="App.toggleAirPlay()">
+            <div class="mode-card pink" id="airplayCard" onclick="App.toggleAirPlay()">
               <div class="mode-card-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 17H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1"/><polygon points="12 15 17 21 7 21 12 15"/></svg>
               </div>
               <div>
-                <div class="mode-card-title" data-i18n="modeAirPlayTitle">iOS AirPlay Mirror</div>
-                <div class="mode-card-desc" data-i18n="modeAirPlayDesc">Mirror iPhone / iPad wirelessly to PC</div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div class="mode-card-title" data-i18n="modeAirPlayTitle">iOS AirPlay Mirror</div>
+                  <span id="airplayBadge" style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: var(--bg-app); color: var(--text-sub);">Standby</span>
+                </div>
+                <div class="mode-card-desc" id="airplayDesc" data-i18n="modeAirPlayDesc">Mirror iPhone / iPad wirelessly to PC (Click to toggle)</div>
               </div>
             </div>
 

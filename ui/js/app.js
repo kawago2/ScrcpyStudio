@@ -17,6 +17,7 @@ const App = {
       this.log("Scrcpy Studio Modern Dashboard ready.", "info");
       this.refreshDevices();
       this.startPolling();
+      this.syncAirPlayStatus();
     });
 
     this.loadLaunchOptions();
@@ -448,18 +449,40 @@ const App = {
   },
 
   async toggleAirPlay() {
-    this.log("Mengaktifkan iOS AirPlay Mirror Receiver...", "info");
     try {
-      const res = await window.pywebview.api.start_airplay();
+      const res = await window.pywebview.api.toggle_airplay();
+      this.updateAirPlayUI(res.running);
       if (res.success) {
-        this.log(res.message, "success");
-        Toast.show(res.message, "success");
+        this.log(res.message, res.running ? "success" : "info");
+        Toast.show(res.message, res.running ? "success" : "info");
       } else {
         this.log(res.message, "warn");
         Toast.show(res.message, "warn");
       }
     } catch (e) {
       this.log(`Error AirPlay: ${e}`, "error");
+    }
+  },
+
+  updateAirPlayUI(isRunning) {
+    const badge = document.getElementById('airplayBadge');
+    const card = document.getElementById('airplayCard');
+    if (badge) {
+      badge.innerText = isRunning ? 'RUNNING' : 'STANDBY';
+      badge.style.background = isRunning ? '#22c55e' : 'var(--bg-app)';
+      badge.style.color = isRunning ? '#ffffff' : 'var(--text-sub)';
+    }
+    if (card) {
+      card.style.borderColor = isRunning ? '#db2777' : 'var(--border-card)';
+    }
+  },
+
+  async syncAirPlayStatus() {
+    try {
+      const status = await window.pywebview.api.get_airplay_status();
+      this.updateAirPlayUI(status.running);
+    } catch {
+      // Ignore if not ready
     }
   }
 };
