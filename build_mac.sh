@@ -7,7 +7,8 @@
 set -e
 
 APP_NAME="ScrcpyStudio"
-VERSION="2.0"
+VERSION="${1:-${VERSION:-2.0}}"
+VERSION="${VERSION#v}"
 DMG_NAME="${APP_NAME}_macOS_v${VERSION}.dmg"
 
 echo "=== 1. Memeriksa Prasyarat di macOS ==="
