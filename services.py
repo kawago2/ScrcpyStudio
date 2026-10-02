@@ -9,6 +9,19 @@ import shutil
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any
 
+# Cross-platform subprocess flag for hiding background console
+NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+
+def kill_scrcpy_process():
+    """Kill running scrcpy instances across Windows, macOS, and Linux"""
+    try:
+        if sys.platform == "win32":
+            subprocess.run(["taskkill.exe", "/F", "/IM", "scrcpy.exe"], capture_output=True, creationflags=NO_WINDOW_FLAG)
+        else:
+            subprocess.run(["pkill", "-f", "scrcpy"], capture_output=True)
+    except Exception:
+        pass
+
 
 class IUpdaterService(ABC):
     @abstractmethod
@@ -76,12 +89,13 @@ class ADBService(IADBService):
     def _execute(self, args: List[str], timeout: Optional[int] = None) -> subprocess.CompletedProcess:
         if not os.path.exists(self.bin):
             raise FileNotFoundError(f"Binary tidak ditemukan di: {self.bin}")
+        extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
         return subprocess.run(
             [self.bin] + args,
             capture_output=True,
             text=True,
             timeout=timeout,
-            creationflags=subprocess.CREATE_NO_WINDOW
+            **extra_kwargs
         )
 
     def list_devices(self) -> List[Dict[str, str]]:
@@ -167,12 +181,13 @@ class ADBService(IADBService):
                 args.extend(["-s", device_id.strip()])
             args.extend(["exec-out", "screencap", "-p"])
 
+            extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
             res = subprocess.run(
                 [self.bin] + args,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=8,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                **extra_kwargs
             )
             if res.returncode == 0 and len(res.stdout) > 0:
                 with open(dest_path, "wb") as f:
@@ -268,12 +283,13 @@ class ScrcpyService(IScrcpyService):
 
         def _spawn():
             try:
+                extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
-                    creationflags=subprocess.CREATE_NO_WINDOW
+                    **extra_kwargs
                 )
                 if proc.stdout:
                     for line in iter(proc.stdout.readline, ''):
@@ -303,13 +319,14 @@ class ScrcpyUpdaterService(IUpdaterService):
         if not os.path.exists(self.scrcpy_bin):
             return "0.0"
         try:
+            extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
             res = subprocess.run(
                 [self.scrcpy_bin, "--version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 timeout=4,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                **extra_kwargs
             )
             first_line = res.stdout.strip().splitlines()[0]
             parts = first_line.split()
@@ -372,7 +389,7 @@ class ScrcpyUpdaterService(IUpdaterService):
         extract_dir = os.path.join(self.base_dir, "scrcpy_extracted_temp")
 
         try:
-            subprocess.run(["taskkill.exe", "/F", "/IM", "scrcpy.exe"], capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            kill_scrcpy_process()
             req = urllib.request.Request(download_url, headers={"User-Agent": "ScrcpyStudio-Updater"})
             with urllib.request.urlopen(req, timeout=60) as response, open(temp_zip, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)

@@ -125,7 +125,14 @@ class AppController:
                 path = os.path.join(os.path.expanduser("~"), "Pictures")
             if not os.path.exists(path):
                 path = BASE_DIR
-            os.startfile(path)
+            if sys.platform == "win32":
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                import subprocess
+                subprocess.run(["open", path])
+            else:
+                import subprocess
+                subprocess.run(["xdg-open", path])
             return f"Folder {folder_type.capitalize()} dibuka."
         except Exception as e:
             return f"Gagal membuka folder: {e}"
