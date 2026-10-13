@@ -283,6 +283,77 @@ const App = {
     this.closeRenameModal();
   },
 
+  async scanWirelessDevices() {
+    const btn = document.getElementById('btnScanMdns');
+    const container = document.getElementById('wirelessDiscoveredContainer');
+    const list = document.getElementById('wirelessDiscoveredList');
+    if (!btn || !container || !list) return;
+
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = `<span>Scanning...</span>`;
+    this.log("Scanning wireless debugging devices via mDNS...", "info");
+
+    try {
+      const results = await window.pywebview.api.scan_wireless_devices();
+      list.innerHTML = '';
+      if (!results || results.length === 0) {
+        container.style.display = 'block';
+        list.innerHTML = `<div style="font-size: 11px; color: var(--text-sub);">${I18nManager.t('noWirelessDevicesFound')}</div>`;
+        this.log("No wireless mDNS services found.", "info");
+      } else {
+        container.style.display = 'block';
+        this.log(`Found ${results.length} wireless mDNS services.`, "success");
+        results.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'wireless-discovered-item';
+          const isPair = item.kind === 'pairing';
+          const badgeClass = isPair ? 'pairing' : 'connect';
+          const badgeLabel = isPair ? 'Pairing Port' : 'Connect Port';
+          const actionBtnText = isPair ? I18nManager.t('btnSelectPair') : I18nManager.t('btnSelectConnect');
+
+          row.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-weight: 600; font-family: monospace;">${item.addr}</div>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <span class="wireless-item-badge ${badgeClass}">${badgeLabel}</span>
+                <span style="font-size: 10px; color: var(--text-sub);">${item.name}</span>
+              </div>
+            </div>
+            <button class="btn-secondary" style="padding: 4px 8px; font-size: 10.5px; font-weight: 600;" onclick="App.applyScannedDevice('${item.ip}', '${item.port}', '${item.kind}')">${actionBtnText}</button>
+          `;
+          list.appendChild(row);
+        });
+      }
+    } catch (err) {
+      this.log(`Error scanning mDNS: ${err}`, "warn");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  },
+
+  applyScannedDevice(ip, port, kind) {
+    if (kind === 'pairing') {
+      const ipInput = document.getElementById('pairIp');
+      const portInput = document.getElementById('pairPort');
+      const codeInput = document.getElementById('pairCode');
+      if (ipInput) ipInput.value = ip;
+      if (portInput) portInput.value = port;
+      if (codeInput) {
+        codeInput.focus();
+        codeInput.select();
+      }
+      Toast.show(I18nManager.t('toastAppliedPair'), "info");
+    } else {
+      const ipInput = document.getElementById('pairIp');
+      const connectPortInput = document.getElementById('connectPort');
+      if (ipInput) ipInput.value = ip;
+      if (connectPortInput) connectPortInput.value = port;
+      Toast.show(I18nManager.t('toastAppliedConnect'), "info");
+    }
+  },
+
   async pairDevice() {
     const ip = document.getElementById('pairIp').value.trim();
     const port = document.getElementById('pairPort').value.trim();

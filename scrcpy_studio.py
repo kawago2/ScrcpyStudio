@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from typing import List, Dict, Any
 import webview
 
@@ -92,6 +93,9 @@ class AppController:
 
     def restart_adb(self) -> str:
         return self._adb.restart_server()
+
+    def scan_wireless_devices(self) -> List[Dict[str, str]]:
+        return self._adb.scan_mdns_services()
 
     def pair_device(self, host_port: str, code: str) -> str:
         return self._adb.pair(host_port, code)

@@ -59,6 +59,10 @@ class IADBService(ABC):
         pass
 
     @abstractmethod
+    def scan_mdns_services(self) -> List[Dict[str, str]]:
+        pass
+
+    @abstractmethod
     def send_key(self, device_id: Optional[str], keycode: str) -> str:
         pass
 
@@ -154,6 +158,53 @@ class ADBService(IADBService):
             return res.returncode == 0
         except Exception:
             return False
+
+    def scan_mdns_services(self) -> List[Dict[str, str]]:
+        if not os.path.exists(self.bin):
+            return []
+        try:
+            extra_kwargs = {"creationflags": NO_WINDOW_FLAG} if sys.platform == "win32" else {}
+            proc = subprocess.Popen(
+                [self.bin, "mdns", "services"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                **extra_kwargs
+            )
+            import time
+            time.sleep(2)
+            try:
+                proc.terminate()
+            except Exception:
+                pass
+            out, _ = proc.communicate(timeout=3)
+            
+            services = []
+            for line in out.strip().splitlines():
+                line = line.strip()
+                if not line or line.startswith("List of discovered"):
+                    continue
+                parts = line.split()
+                if len(parts) >= 3:
+                    name = parts[0]
+                    svc_type = parts[1]
+                    addr = parts[2]
+                    
+                    ip = addr.split(":")[0] if ":" in addr else addr
+                    port = addr.split(":")[1] if ":" in addr else ""
+                    kind = "pairing" if "tls-pairing" in svc_type else "connect"
+                    
+                    services.append({
+                        "name": name,
+                        "type": svc_type,
+                        "addr": addr,
+                        "ip": ip,
+                        "port": port,
+                        "kind": kind
+                    })
+            return services
+        except Exception:
+            return []
 
     def send_key(self, device_id: Optional[str], keycode: str) -> str:
         try:
