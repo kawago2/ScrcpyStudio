@@ -370,6 +370,33 @@ const App = {
     const isSuccess = res.includes("Successfully");
     this.log(res, isSuccess ? "success" : "info");
     Toast.show(isSuccess ? I18nManager.t('toastPairSuccess') : res, isSuccess ? "success" : "info");
+    
+    if (isSuccess) {
+      // Auto-connect attempt
+      const connectPortVal = document.getElementById('connectPort') ? document.getElementById('connectPort').value.trim() : '';
+      if (connectPortVal) {
+        this.log(`Auto-connecting to ${ip}:${connectPortVal}...`, "info");
+        await this.connectDirectPort();
+      } else {
+        // Coba scan mDNS untuk mencari TLS connect port perangkat secara otomatis
+        this.log("Looking up connect port via mDNS...", "info");
+        try {
+          const services = await window.pywebview.api.scan_wireless_devices();
+          const connSvc = services.find(s => (s.kind === 'connect' || s.type.includes('tls-connect')) && (s.ip === ip || !ip));
+          if (connSvc && connSvc.port) {
+            const connectPortInput = document.getElementById('connectPort');
+            if (connectPortInput) connectPortInput.value = connSvc.port;
+            this.log(`Found connect port: ${connSvc.port}. Auto-connecting...`, "info");
+            await this.connectDirectPort();
+          } else {
+            this.log("Pairing done. Please enter Connect Port from phone screen and click Connect.", "warn");
+          }
+        } catch (e) {
+          this.log(`Failed auto-lookup connect port: ${e}`, "warn");
+        }
+      }
+    }
+
     this.refreshDevices();
   },
 
